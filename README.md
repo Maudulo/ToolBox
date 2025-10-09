@@ -23,4 +23,7 @@ ajout calques sur map
 Gestion d'un tour de role pour les combats (manuel en première étape)
 Lancer un dé d'une valeur entre 1 et 100 (avec des valeurs par défaut, 2, 4, 6, 8, 12, 20, 100)
 
+- 4eme itération : Amélioration générale
+A définir
+
 
