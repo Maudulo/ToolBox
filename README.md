@@ -1,2 +1,2 @@
 # ToolBox
-toolbix pour MJ
+toolbox pour MJ
