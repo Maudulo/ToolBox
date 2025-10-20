@@ -130,6 +130,7 @@ export class Dice6Component implements AfterViewInit, OnDestroy {
 
   // #region LANCER N DÉS DYNAMIQUEMENT
   public rollMultipleDice(count: number = 3) {
+    // Nettoyage
     for (const mesh of this.diceMeshes) this.scene.remove(mesh);
     for (const body of this.diceBodies) this.world.removeBody(body);
     this.diceBodies = [];
@@ -137,43 +138,42 @@ export class Dice6Component implements AfterViewInit, OnDestroy {
     this.lastResults = [];
     this.resultsLocked = false;
 
-    const spacing = 1.2;
-    const startX = -(count - 1) * spacing / 2;
+    // 🧮 Placement automatique : grille centrée
+    const cols = Math.ceil(Math.sqrt(count)); // nb de dés par ligne
+    const spacing = 1.2; // écart horizontal/vertical
+    const startX = -(cols - 1) * spacing / 2;
+    const startZ = -(cols - 1) * spacing / 2;
 
     for (let i = 0; i < count; i++) {
-      const pos = new CANNON.Vec3(startX + i * spacing, 3, 0);
-      const dice = this.createDice(pos);
-      dice.quaternion.setFromEuler(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+      const row = Math.floor(i / cols);
+      const col = i % cols;
 
+      // Position aléatoire autour d'une grille centrale
+      const x = startX + col * spacing + (Math.random() - 0.5) * 0.2;
+      const z = startZ + row * spacing + (Math.random() - 0.5) * 0.2;
+      const y = 3 + Math.random() * 0.5;
+
+      const pos = new CANNON.Vec3(x, y, z);
+      const dice = this.createDice(pos);
+
+      dice.quaternion.setFromEuler(
+        Math.random() * Math.PI,
+        Math.random() * Math.PI,
+        Math.random() * Math.PI
+      );
+
+      // 💥 Impulsion aléatoire mais contenue
       const impulse = new CANNON.Vec3(
-        (Math.random() - 0.5) * 4,
+        (Math.random() - 0.5) * 6,
         Math.random() * 6 + 3,
-        (Math.random() - 0.5) * 4
+        (Math.random() - 0.5) * 6
       );
       dice.applyImpulse(impulse, new CANNON.Vec3(0, 0, 0));
     }
 
-    const sound = this.rollSoundRef?.nativeElement;
-    if (sound) { sound.currentTime = 0; sound.play().catch(() => {}); }
-  }
-
-  // #region LANCER LE DÉ
-  public rollDice() {
-    this.lastResults = [];
-
-    for (const dice of this.diceBodies) {
-      dice.position.set((Math.random() - 0.5) * 2, 3 + Math.random() * 0.5, (Math.random() - 0.5) * 2);
-      dice.velocity.set(0, 0, 0);
-      dice.angularVelocity.set(0, 0, 0);
-      dice.quaternion.setFromEuler(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
-
-      const maxVertical = 6;
-      const impulse = new CANNON.Vec3((Math.random() - 0.5) * 4, Math.random() * maxVertical + 3, (Math.random() - 0.5) * 4);
-      dice.applyImpulse(impulse, new CANNON.Vec3(0, 0, 0));
-    }
-
-    const sound = this.rollSoundRef?.nativeElement;
-    if (sound) { sound.currentTime = 0; sound.play().catch(() => {}); }
+    // 🔊 Son de lancer
+    //const sound = this.rollSoundRef?.nativeElement;
+    //if (sound) { sound.currentTime = 0; sound.play().catch(() => {}); }
   }
 
   // #region CREATION DU DÉ
@@ -215,6 +215,49 @@ export class Dice6Component implements AfterViewInit, OnDestroy {
     this.diceBodies.push(dice);
     this.diceMeshes.push(mesh);
     return dice;
+  }
+
+  private createDiceBodies(count: number) {
+    this.diceBodies.forEach(d => this.world.removeBody(d)); // supprimer les anciens dés
+    this.diceBodies = [];
+
+    const diceShape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5));
+    const diceMaterial = new CANNON.Material('dice');
+
+    // 🔹 Déterminer la disposition (grille)
+    const cols = Math.ceil(Math.sqrt(count));
+    const spacing = 1.2; // distance entre les dés
+    const startX = -(cols - 1) * spacing / 2;
+    const startZ = -(cols - 1) * spacing / 2;
+
+    for (let i = 0; i < count; i++) {
+      const row = Math.floor(i / cols);
+      const col = i % cols;
+
+      // Position de base dans la grille
+      const x = startX + col * spacing + (Math.random() - 0.5) * 0.2; // légère variation
+      const z = startZ + row * spacing + (Math.random() - 0.5) * 0.2;
+      const y = 3 + Math.random() * 0.5; // un peu de hauteur aléatoire
+
+      const body = new CANNON.Body({
+        mass: 1,
+        shape: diceShape,
+        position: new CANNON.Vec3(x, y, z),
+        material: diceMaterial,
+        angularDamping: 0.1,
+        linearDamping: 0.1,
+      });
+
+      // Orientation initiale aléatoire
+      body.quaternion.setFromEuler(
+        Math.random() * Math.PI,
+        Math.random() * Math.PI,
+        Math.random() * Math.PI
+      );
+
+      this.world.addBody(body);
+      this.diceBodies.push(body);
+    }
   }
 
   // #region DANS L’ANIMATION PRINCIPALE
