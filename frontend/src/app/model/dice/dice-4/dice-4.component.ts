@@ -12,18 +12,18 @@ import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
 import { NgIf } from '@angular/common';
 
-const BOX_WIDTH = 10;
+const BOX_WIDTH = 20;
 const BOX_HEIGHT = 50;
-const BOX_DEPTH = 10;
+const BOX_DEPTH = 20;
 const WALL_THICKNESS = 0.1;
 
 @Component({
-  selector: 'app-dice-6',
+  selector: 'app-dice-4',
   imports: [FormsModule, NgIf],
-  templateUrl: './dice-6.component.html',
-  styleUrl: './dice-6.component.scss'
+  templateUrl: './dice-4.component.html',
+  styleUrl: './dice-4.component.scss'
 })
-export class Dice6Component implements AfterViewInit, OnDestroy {
+export class Dice4Component implements AfterViewInit, OnDestroy {
   @ViewChild('canvas', { static: false }) canvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('rollSound', { static: false }) rollSoundRef!: ElementRef<HTMLAudioElement>;
 
@@ -45,6 +45,8 @@ export class Dice6Component implements AfterViewInit, OnDestroy {
   private lastCheckTime = 0;
   private resultsLocked = false;
 
+  constructor(private ngZone: NgZone, private cdr: ChangeDetectorRef) {}
+
   ngAfterViewInit() {
     this.initThree();
     this.initPhysics();
@@ -54,8 +56,6 @@ export class Dice6Component implements AfterViewInit, OnDestroy {
   ngOnDestroy() {
     if (this.animationId) cancelAnimationFrame(this.animationId);
   }
-
-  constructor(private ngZone: NgZone, private cdr: ChangeDetectorRef) {}
 
   // #region INITIALISATION THREE.JS
   private initThree() {
@@ -67,14 +67,14 @@ export class Dice6Component implements AfterViewInit, OnDestroy {
     this.camera.lookAt(0, 0, 0);
 
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-    this.renderer.setSize(300, 300);
+    this.renderer.setSize(600, 600);
     this.renderer.setPixelRatio(window.devicePixelRatio);
 
     const ambient = new THREE.AmbientLight(0xffffff, 0.6);
     const light = new THREE.DirectionalLight(0xffffff, 0.9);
     light.position.set(10, 10, 10);
     this.scene.add(ambient, light);
-    
+
     const planeGeo = new THREE.PlaneGeometry(BOX_WIDTH, BOX_DEPTH);
     const planeMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
     const plane = new THREE.Mesh(planeGeo, planeMat);
@@ -105,7 +105,7 @@ export class Dice6Component implements AfterViewInit, OnDestroy {
       restitution: 0.6
     });
     this.world.addContactMaterial(contact);
-    
+
     // Sol
     const groundShape = new CANNON.Box(new CANNON.Vec3(BOX_WIDTH  / 2, 0.05, BOX_DEPTH / 2));
     this.groundBody = new CANNON.Body({ mass: 0, shape: groundShape, material: wallMaterial });
@@ -134,7 +134,6 @@ export class Dice6Component implements AfterViewInit, OnDestroy {
 
   // #region LANCER N DÉS DYNAMIQUEMENT
   public rollMultipleDice(count: number = 3) {
-    // Nettoyage
     for (const mesh of this.diceMeshes) this.scene.remove(mesh);
     for (const body of this.diceBodies) this.world.removeBody(body);
     this.diceBodies = [];
@@ -142,47 +141,39 @@ export class Dice6Component implements AfterViewInit, OnDestroy {
     this.lastResults = [];
     this.resultsLocked = false;
 
-    // 🧮 Placement automatique : grille centrée
-    const cols = Math.ceil(Math.sqrt(count)); // nb de dés par ligne
-    const spacing = 1.2; // écart horizontal/vertical
-    const startX = -(cols - 1) * spacing / 2;
-    const startZ = -(cols - 1) * spacing / 2;
+    const spacing = 1.5;
+    const startX = -(count - 1) * spacing / 2;
 
     for (let i = 0; i < count; i++) {
-      const row = Math.floor(i / cols);
-      const col = i % cols;
-
-      // Position aléatoire autour d'une grille centrale
-      const x = startX + col * spacing + (Math.random() - 0.5) * 0.2;
-      const z = startZ + row * spacing + (Math.random() - 0.5) * 0.2;
-      const y = 3 + Math.random() * 0.5;
-
-      const pos = new CANNON.Vec3(x, y, z);
+      const pos = new CANNON.Vec3(startX + i * spacing, 3, 0);
       const dice = this.createDice(pos);
+      dice.quaternion.setFromEuler(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
 
-      dice.quaternion.setFromEuler(
-        Math.random() * Math.PI,
-        Math.random() * Math.PI,
-        Math.random() * Math.PI
-      );
-
-      // 💥 Impulsion aléatoire mais contenue
       const impulse = new CANNON.Vec3(
-        (Math.random() - 0.5) * 6,
+        (Math.random() - 0.5) * 4,
         Math.random() * 6 + 3,
-        (Math.random() - 0.5) * 6
+        (Math.random() - 0.5) * 4
       );
       dice.applyImpulse(impulse, new CANNON.Vec3(0, 0, 0));
     }
-
-    // 🔊 Son de lancer
-    //const sound = this.rollSoundRef?.nativeElement;
-    //if (sound) { sound.currentTime = 0; sound.play().catch(() => {}); }
   }
 
   // #region CREATION DU DÉ
   private createDice(position: CANNON.Vec3): CANNON.Body {
-    const diceShape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5));
+    // ----- PHYSIQUE -----
+    const vertices = [
+      new CANNON.Vec3(1, 1, 1),
+      new CANNON.Vec3(-1, -1, 1),
+      new CANNON.Vec3(-1, 1, -1),
+      new CANNON.Vec3(1, -1, -1),
+    ];
+    const faces = [
+      [0, 2, 1],
+      [0, 1, 3],
+      [0, 3, 2],
+      [1, 2, 3],
+    ];
+    const diceShape = new CANNON.ConvexPolyhedron({ vertices, faces });
     const diceMaterial = new CANNON.Material('dice');
     const dice = new CANNON.Body({
       mass: 1,
@@ -192,6 +183,39 @@ export class Dice6Component implements AfterViewInit, OnDestroy {
       angularDamping: 0.1,
       linearDamping: 0.1
     });
+    this.world.addBody(dice);
+
+    // ----- VISUEL -----
+    const loader = new THREE.TextureLoader();
+    const materials = [
+      new THREE.MeshBasicMaterial({ color: 'red' }),
+      new THREE.MeshBasicMaterial({ color: 'green' }),
+      // new THREE.MeshStandardMaterial({ map: loader.load('assets/dice_4/face-4.png') }),
+      new THREE.MeshBasicMaterial({ color: 'blue' }),
+      new THREE.MeshBasicMaterial({ color: 'yellow' })
+      // new THREE.MeshStandardMaterial({ map: loader.load('assets/dice_4/face-4.png') }),
+      // new THREE.MeshStandardMaterial({ map: loader.load('assets/dice_4/face-4.png') }),
+      // new THREE.MeshStandardMaterial({ map: loader.load('assets/dice_4/face-4.png') })
+    ]
+
+    // Création d’un tetraèdre
+    const geometry = new THREE.TetrahedronGeometry(1);
+
+    // Clear les groupes par défaut
+    geometry.clearGroups();
+
+    // Définir un groupe par face
+    // Chaque face a 3 sommets consécutifs (triangle)
+    geometry.addGroup(0, 3, 0);  // Face 0 → Mat 0
+    geometry.addGroup(3, 3, 1);  // Face 1 → Mat 1
+    geometry.addGroup(6, 3, 2);  // Face 2 → Mat 2
+    geometry.addGroup(9, 3, 3);  // Face 3 → Mat 3
+
+    const mesh = new THREE.Mesh(geometry, materials);
+    this.scene.add(mesh);
+
+    this.diceBodies.push(dice);
+    this.diceMeshes.push(mesh);
 
     dice.addEventListener('collide', () => {
       const sound = this.rollSoundRef?.nativeElement;
@@ -201,23 +225,6 @@ export class Dice6Component implements AfterViewInit, OnDestroy {
       }
     });
 
-    this.world.addBody(dice);
-
-    const loader = new THREE.TextureLoader();
-    const materials = [
-      new THREE.MeshStandardMaterial({ map: loader.load('assets/dice_6/face-1.png') }),
-      new THREE.MeshStandardMaterial({ map: loader.load('assets/dice_6/face-6.png') }),
-      new THREE.MeshStandardMaterial({ map: loader.load('assets/dice_6/face-3.png') }),
-      new THREE.MeshStandardMaterial({ map: loader.load('assets/dice_6/face-4.png') }),
-      new THREE.MeshStandardMaterial({ map: loader.load('assets/dice_6/face-5.png') }),
-      new THREE.MeshStandardMaterial({ map: loader.load('assets/dice_6/face-2.png') }),
-    ];
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const mesh = new THREE.Mesh(geometry, materials);
-    this.scene.add(mesh);
-
-    this.diceBodies.push(dice);
-    this.diceMeshes.push(mesh);
     return dice;
   }
 
@@ -243,9 +250,7 @@ export class Dice6Component implements AfterViewInit, OnDestroy {
   private checkIfDiceStopped() {
     if (this.resultsLocked) return;
 
-    const stopped = this.diceBodies.every(
-      d => d.velocity.length() < 0.05 && d.angularVelocity.length() < 0.05 && d.position.y < 1.2
-    );
+    const stopped = this.diceBodies.every(d => d.velocity.length() < 0.05 && d.angularVelocity.length() < 0.05 && d.position.y < 1.2);
 
     if (stopped) {
       this.resultsLocked = true;
@@ -260,35 +265,34 @@ export class Dice6Component implements AfterViewInit, OnDestroy {
       this.ngZone.run(() => {
         this.lastResults = results;
         this.totalSum = sum;
-        this.cdr.detectChanges(); // ✅ force Angular à mettre à jour le DOM
+        this.cdr.detectChanges();
       });
 
-      console.log('🎲 Résultats :', results, '→ Somme totale :', sum);
+      console.log('🎲 D4 Résultats :', results, '→ Somme totale :', sum);
     }
   }
 
   private getDiceResultFromBody(dice: CANNON.Body): number {
-    const faces = [
-      { normal: new CANNON.Vec3(0, 1, 0), value: 3 },
-      { normal: new CANNON.Vec3(0, -1, 0), value: 4 },
-      { normal: new CANNON.Vec3(1, 0, 0), value: 1 },
-      { normal: new CANNON.Vec3(-1, 0, 0), value: 6 },
-      { normal: new CANNON.Vec3(0, 0, 1), value: 5 },
-      { normal: new CANNON.Vec3(0, 0, -1), value: 2 },
-    ];
+    const shape = dice.shapes[0] as CANNON.ConvexPolyhedron;
 
-    const up = new CANNON.Vec3(0, 1, 0);
-    let best = faces[0];
-    let maxDot = -Infinity;
+    // Transforme chaque vertex dans le monde
+    const transformed = shape.vertices.map(v => {
+      const worldPos = dice.quaternion.vmult(v).vadd(dice.position);
+      return worldPos;
+    });
 
-    for (const f of faces) {
-      const worldNormal = dice.quaternion.vmult(f.normal);
-      const dot = worldNormal.dot(up);
-      if (dot > maxDot) {
-        maxDot = dot;
-        best = f;
+    // Trouve le sommet le plus haut
+    let maxY = -Infinity;
+    let topIndex = 0;
+    transformed.forEach((v, i) => {
+      if (v.y > maxY) {
+        maxY = v.y;
+        topIndex = i;
       }
-    }
-    return best.value;
+    });
+
+    // Map sommet → valeur du dé (ordre arbitraire, mais cohérent avec la physique)
+    const valueMap = [1, 2, 3, 4];
+    return valueMap[topIndex];
   }
 }
