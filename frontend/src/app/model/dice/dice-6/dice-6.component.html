@@ -1,0 +1,23 @@
+<div class="dice-container">
+  <canvas #canvas></canvas>
+
+  <div class="controls">
+    <label for="diceCount">Nombre de dés :</label>
+    <input
+      id="diceCount"
+      type="number"
+      min="1"
+      max="10"
+      [(ngModel)]="diceCount"
+    />
+
+    <button (click)="rollMultipleDice(diceCount)">🎲 Lancer</button>
+
+    <div class="results">
+      <p>Résultats : {{ lastResults.join(' + ') }}</p>
+      <p class="sum">Somme : <strong>{{ totalSum }}</strong></p>
+    </div>
+  </div>
+
+  <audio #rollSound src="assets/sounds/dice-roll.mp3"></audio>
+</div>
