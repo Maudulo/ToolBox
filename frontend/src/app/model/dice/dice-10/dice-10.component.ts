@@ -20,12 +20,12 @@ const WALL_THICKNESS = 0.1;
 const ZOOM_FACTOR = 3;
 
 @Component({
-  selector: 'app-dice-4',
+  selector: 'app-dice-10',
   imports: [FormsModule, NgIf],
-  templateUrl: './dice-4.component.html',
-  styleUrl: './dice-4.component.scss'
+  templateUrl: './dice-10.component.html',
+  styleUrl: './dice-10.component.scss'
 })
-export class Dice4Component implements AfterViewInit, OnDestroy {
+export class Dice10Component implements AfterViewInit, OnDestroy {
   @ViewChild('canvas', { static: false }) canvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('rollSound', { static: false }) rollSoundRef!: ElementRef<HTMLAudioElement>;
 
@@ -48,8 +48,6 @@ export class Dice4Component implements AfterViewInit, OnDestroy {
   private lastCheckTime = 0;
   private resultsLocked = false;
 
-  constructor(private ngZone: NgZone, private cdr: ChangeDetectorRef) {}
-
   ngAfterViewInit() {
     this.initThree();
     this.initPhysics();
@@ -59,6 +57,8 @@ export class Dice4Component implements AfterViewInit, OnDestroy {
   ngOnDestroy() {
     if (this.animationId) cancelAnimationFrame(this.animationId);
   }
+
+  constructor(private ngZone: NgZone, private cdr: ChangeDetectorRef) {}
 
   // #region INITIALISATION THREE.JS
   private initThree() {
@@ -72,18 +72,14 @@ export class Dice4Component implements AfterViewInit, OnDestroy {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     this.renderer.setSize(600, 600);
     this.renderer.setPixelRatio(window.devicePixelRatio);
-    
+
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
-
-    // Autoriser zoom et rotation
     this.controls.enableZoom = true;
-    this.controls.minDistance = 4;   // distance minimale (évite de passer à travers les dés)
-    this.controls.maxDistance = 25;  // distance max (évite de trop s’éloigner)
+    this.controls.minDistance = 4;
+    this.controls.maxDistance = 25;
     this.controls.enablePan = true;
-
-    // Point autour duquel la caméra tourne
     this.controls.target.set(0, 0, 0);
     this.controls.update();
 
@@ -91,24 +87,24 @@ export class Dice4Component implements AfterViewInit, OnDestroy {
     const light = new THREE.DirectionalLight(0xffffff, 0.9);
     light.position.set(10, 10, 10);
     this.scene.add(ambient, light);
-    
+
     // Sol visuel
     const planeGeo = new THREE.PlaneGeometry(BOX_WIDTH, BOX_DEPTH);
     const planeMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
     const plane = new THREE.Mesh(planeGeo, planeMat);
     plane.rotation.x = -Math.PI / 2;
     this.scene.add(plane);
-    
-    // Zone de lancer visible
+
+    // Zone de lancer
     const boxGeo = new THREE.BoxGeometry(BOX_WIDTH, BOX_HEIGHT, BOX_DEPTH);
     const boxMat = new THREE.MeshBasicMaterial({
       color: 0x00ffcc,
       wireframe: true,
       transparent: true,
-      opacity: 0.1
+      opacity: 0.1,
     });
     const boundary = new THREE.Mesh(boxGeo, boxMat);
-    boundary.position.y = BOX_HEIGHT / 2; // centre de la boîte
+    boundary.position.y = BOX_HEIGHT / 2;
     this.scene.add(boundary);
   }
 
@@ -121,17 +117,16 @@ export class Dice4Component implements AfterViewInit, OnDestroy {
     const diceMaterial = new CANNON.Material('dice');
     const contact = new CANNON.ContactMaterial(diceMaterial, wallMaterial, {
       friction: 0.3,
-      restitution: 0.6
+      restitution: 0.6,
     });
     this.world.addContactMaterial(contact);
 
     // Sol
-    const groundShape = new CANNON.Box(new CANNON.Vec3(BOX_WIDTH  / 2, 0.05, BOX_DEPTH / 2));
+    const groundShape = new CANNON.Box(new CANNON.Vec3(BOX_WIDTH / 2, 0.05, BOX_DEPTH / 2));
     this.groundBody = new CANNON.Body({ mass: 0, shape: groundShape, material: wallMaterial });
     this.groundBody.position.set(0, -0.05, 0);
     this.world.addBody(this.groundBody);
 
-    // Murs
     const createWallBox = (x: number, y: number, z: number, sx: number, sy: number, sz: number) => {
       const shape = new CANNON.Box(new CANNON.Vec3(sx / 2, sy / 2, sz / 2));
       const wall = new CANNON.Body({ mass: 0, shape, material: wallMaterial });
@@ -139,10 +134,10 @@ export class Dice4Component implements AfterViewInit, OnDestroy {
       this.world.addBody(wall);
     };
 
-    createWallBox(0, BOX_HEIGHT / 2, BOX_DEPTH / 2, BOX_WIDTH, BOX_HEIGHT, WALL_THICKNESS);   // Nord
-    createWallBox(0, BOX_HEIGHT / 2, -BOX_DEPTH / 2, BOX_WIDTH, BOX_HEIGHT, WALL_THICKNESS);  // Sud
-    createWallBox(BOX_WIDTH / 2, BOX_HEIGHT / 2, 0, WALL_THICKNESS, BOX_HEIGHT, BOX_DEPTH);   // Est
-    createWallBox(-BOX_WIDTH / 2, BOX_HEIGHT / 2, 0, WALL_THICKNESS, BOX_HEIGHT, BOX_DEPTH);  // Ouest
+    createWallBox(0, BOX_HEIGHT / 2, BOX_DEPTH / 2, BOX_WIDTH, BOX_HEIGHT, WALL_THICKNESS);
+    createWallBox(0, BOX_HEIGHT / 2, -BOX_DEPTH / 2, BOX_WIDTH, BOX_HEIGHT, WALL_THICKNESS);
+    createWallBox(BOX_WIDTH / 2, BOX_HEIGHT / 2, 0, WALL_THICKNESS, BOX_HEIGHT, BOX_DEPTH);
+    createWallBox(-BOX_WIDTH / 2, BOX_HEIGHT / 2, 0, WALL_THICKNESS, BOX_HEIGHT, BOX_DEPTH);
 
     // Plafond
     const ceilingShape = new CANNON.Box(new CANNON.Vec3(BOX_WIDTH / 2, 0.05, BOX_DEPTH / 2));
@@ -160,102 +155,102 @@ export class Dice4Component implements AfterViewInit, OnDestroy {
     this.lastResults = [];
     this.resultsLocked = false;
 
-    const spacing = 1.5;
-    const startX = -(count - 1) * spacing / 2;
+    const cols = Math.ceil(Math.sqrt(count));
+    const spacing = 1.2;
+    const startX = -(cols - 1) * spacing / 2;
+    const startZ = -(cols - 1) * spacing / 2;
 
     for (let i = 0; i < count; i++) {
-      const pos = new CANNON.Vec3(startX + i * spacing, 3, 0);
+      const row = Math.floor(i / cols);
+      const col = i % cols;
+
+      const x = startX + col * spacing + (Math.random() - 0.5) * 0.2;
+      const z = startZ + row * spacing + (Math.random() - 0.5) * 0.2;
+      const y = 3 + Math.random() * 0.5;
+
+      const pos = new CANNON.Vec3(x, y, z);
       const dice = this.createDice(pos);
-      dice.quaternion.setFromEuler(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+
+      dice.quaternion.setFromEuler(
+        Math.random() * Math.PI,
+        Math.random() * Math.PI,
+        Math.random() * Math.PI
+      );
 
       const impulse = new CANNON.Vec3(
-        (Math.random() - 0.5) * 4,
+        (Math.random() - 0.5) * 6,
         Math.random() * 6 + 3,
-        (Math.random() - 0.5) * 4
+        (Math.random() - 0.5) * 6
       );
       dice.applyImpulse(impulse, new CANNON.Vec3(0, 0, 0));
     }
   }
-
+  
   // #region CREATION DU DÉ
   private createDice(position: CANNON.Vec3): CANNON.Body {
-    // ----- PHYSIQUE -----
-    const vertices = [
-      new CANNON.Vec3(1, 1, 1),
-      new CANNON.Vec3(-1, -1, 1),
-      new CANNON.Vec3(-1, 1, -1),
-      new CANNON.Vec3(1, -1, -1),
-    ];
-    const faces = [
-      [0, 2, 1],
-      [0, 1, 3],
-      [0, 3, 2],
-      [1, 2, 3],
-    ];
-    const diceShape = new CANNON.ConvexPolyhedron({ vertices, faces });
-    const diceMaterial = new CANNON.Material('dice');
-
-    const dice = new CANNON.Body({
-      mass: 1,
-      shape: diceShape,
-      position,
-      material: diceMaterial,
-      angularDamping: 0.1,
-      linearDamping: 0.1,
-    });
-    this.world.addBody(dice);
-
-    // ----- VISUEL -----
+    // --- Création du mesh THREE ---
+    const geometry = new THREE.OctahedronGeometry(1, 0); // on garde D10 visuel
     const loader = new THREE.TextureLoader();
-    let geometry: THREE.BufferGeometry = new THREE.TetrahedronGeometry(1);
 
-    // 👉 S'assurer que la géométrie a bien des index
-    if (!geometry.index) {
-      geometry = geometry.toNonIndexed(); // pas besoin de caster en TetrahedronGeometry
-    }
-
-    // 4 textures pour les 4 faces
-    const materials = Array.from({ length: 4 }, (_, i) =>
-      new THREE.MeshStandardMaterial({
-        // map: loader.load(`assets/dice_4/face-${i + 1}.png`),
-        color: 0xffffff * Math.random(),
-        roughness: 0.5,
-        metalness: 0.2,
-      })
+    const materials = Array.from({ length: 10 }, (_, i) =>
+      new THREE.MeshStandardMaterial({ color: 0xffffff * Math.random() })
     );
-    
-    // const materials = [
-    //   new THREE.MeshStandardMaterial({ color: 'red' }),
-    //   new THREE.MeshStandardMaterial({ color: 'green' }),
-    //   new THREE.MeshStandardMaterial({ color: 'blue' }),
-    //   new THREE.MeshStandardMaterial({ color: 'yellow' })
-    // ]
-
-    geometry.clearGroups();
-
-    const indexCount = geometry.index ? geometry.index.count : geometry.attributes['position'].count;
-    const faceCount = indexCount / 3;
-
-    // Associer une texture à chaque face
-    for (let i = 0; i < faceCount; i++) {
-      geometry.addGroup(i * 3, 3, i % materials.length);
-    }
 
     const mesh = new THREE.Mesh(geometry, materials);
     this.scene.add(mesh);
 
-    // ---- Lien physique / visuel ----
+    // --- Sommets et faces D10 corrects pour Cannon.js ---
+    const vertices = [
+      new CANNON.Vec3(0, 0, 1),
+      new CANNON.Vec3(0.894427, 0, 0.447214),
+      new CANNON.Vec3(0.276393, 0.850651, 0.447214),
+      new CANNON.Vec3(-0.723607, 0.525731, 0.447214),
+      new CANNON.Vec3(-0.723607, -0.525731, 0.447214),
+      new CANNON.Vec3(0.276393, -0.850651, 0.447214),
+      new CANNON.Vec3(0.723607, 0.525731, -0.447214),
+      new CANNON.Vec3(-0.276393, 0.850651, -0.447214),
+      new CANNON.Vec3(-0.894427, 0, -0.447214),
+      new CANNON.Vec3(-0.276393, -0.850651, -0.447214),
+      new CANNON.Vec3(0.723607, -0.525731, -0.447214),
+      new CANNON.Vec3(0, 0, -1),
+    ];
+
+    const faces = [
+      [0,1,2],[0,2,3],[0,3,4],[0,4,5],[0,5,1],
+      [1,6,2],[2,7,3],[3,8,4],[4,9,5],[5,10,1],
+      [6,7,2],[7,8,3],[8,9,4],[9,10,5],[10,6,1],
+      [6,11,7],[7,11,8],[8,11,9],[9,11,10],[10,11,6],
+    ];
+
+    const diceShape = new CANNON.ConvexPolyhedron({ vertices, faces });
+
+    // --- Body Cannon ---
+    const dice = new CANNON.Body({
+      mass: 1,
+      shape: diceShape,
+      position,
+      angularDamping: 0.1,
+      linearDamping: 0.1,
+    });
+
+    // Rotation aléatoire
+    dice.quaternion.setFromEuler(
+      Math.random() * Math.PI,
+      Math.random() * Math.PI,
+      Math.random() * Math.PI
+    );
+
+    // Impulsion aléatoire pour lancer le dé
+    const impulse = new CANNON.Vec3(
+      (Math.random() - 0.5) * 6,
+      Math.random() * 6 + 3,
+      (Math.random() - 0.5) * 6
+    );
+    dice.applyImpulse(impulse, new CANNON.Vec3(0, 0, 0));
+
+    this.world.addBody(dice);
     this.diceBodies.push(dice);
     this.diceMeshes.push(mesh);
-
-    // ---- Son ----
-    dice.addEventListener('collide', () => {
-      const sound = this.rollSoundRef?.nativeElement;
-      if (sound && sound.paused) {
-        sound.currentTime = 0;
-        sound.play().catch(() => {});
-      }
-    });
 
     return dice;
   }
@@ -283,7 +278,9 @@ export class Dice4Component implements AfterViewInit, OnDestroy {
   private checkIfDiceStopped() {
     if (this.resultsLocked) return;
 
-    const stopped = this.diceBodies.every(d => d.velocity.length() < 0.05 && d.angularVelocity.length() < 0.05 && d.position.y < 1.2);
+    const stopped = this.diceBodies.every(
+      d => d.velocity.length() < 0.05 && d.angularVelocity.length() < 0.05 && d.position.y < 1.2
+    );
 
     if (stopped) {
       this.resultsLocked = true;
@@ -301,31 +298,38 @@ export class Dice4Component implements AfterViewInit, OnDestroy {
         this.cdr.detectChanges();
       });
 
-      console.log('🎲 D4 Résultats :', results, '→ Somme totale :', sum);
+      console.log('🎲 Résultats :', results, '→ Somme totale :', sum);
     }
   }
-
+  
   private getDiceResultFromBody(dice: CANNON.Body): number {
-    const shape = dice.shapes[0] as CANNON.ConvexPolyhedron;
+    // Normales locales approximatives des 10 faces
+    const faces = [
+      { normal: new CANNON.Vec3(0, 0.8507, 0.5257), value: 1 },
+      { normal: new CANNON.Vec3(0, 0.8507, -0.5257), value: 2 },
+      { normal: new CANNON.Vec3(0, -0.8507, 0.5257), value: 3 },
+      { normal: new CANNON.Vec3(0, -0.8507, -0.5257), value: 4 },
+      { normal: new CANNON.Vec3(0.5257, 0, 0.8507), value: 5 },
+      { normal: new CANNON.Vec3(-0.5257, 0, 0.8507), value: 6 },
+      { normal: new CANNON.Vec3(0.5257, 0, -0.8507), value: 7 },
+      { normal: new CANNON.Vec3(-0.5257, 0, -0.8507), value: 8 },
+      { normal: new CANNON.Vec3(0.8507, 0.5257, 0), value: 9 },
+      { normal: new CANNON.Vec3(-0.8507, 0.5257, 0), value: 10 },
+    ];
 
-    // Transforme chaque vertex dans le monde
-    const transformed = shape.vertices.map(v => {
-      const worldPos = dice.quaternion.vmult(v).vadd(dice.position);
-      return worldPos;
-    });
+    const up = new CANNON.Vec3(0, 1, 0);
+    let best = faces[0];
+    let maxDot = -Infinity;
 
-    // Trouve le sommet le plus haut
-    let maxY = -Infinity;
-    let topIndex = 0;
-    transformed.forEach((v, i) => {
-      if (v.y > maxY) {
-        maxY = v.y;
-        topIndex = i;
+    for (const f of faces) {
+      // Rotation du dé appliquée à la normale
+      const worldNormal = dice.quaternion.vmult(f.normal);
+      const dot = worldNormal.dot(up); // projection sur l'axe Y
+      if (dot > maxDot) {
+        maxDot = dot;
+        best = f;
       }
-    });
-
-    // Map sommet → valeur du dé (ordre arbitraire, mais cohérent avec la physique)
-    const valueMap = [1, 2, 3, 4];
-    return valueMap[topIndex];
+    }
+    return best.value;
   }
 }

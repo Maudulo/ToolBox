@@ -232,19 +232,10 @@ export class Dice8Component implements AfterViewInit, OnDestroy {
     const geometry = new THREE.OctahedronGeometry(1);
 
     // Faces numérotées 1–8
-    // const materials = Array.from({ length: 8 }, (_, i) =>
+    const materials = Array.from({ length: 8 }, (_, i) =>
     //   new THREE.MeshStandardMaterial({ map: loader.load(`assets/dice_8/face-${i + 1}.png`) })
-    // );
-    const materials = [
-      new THREE.MeshStandardMaterial({ color: 'red' }),
-      new THREE.MeshStandardMaterial({ color: 'green' }),
-      new THREE.MeshStandardMaterial({ color: 'blue' }),
-      new THREE.MeshStandardMaterial({ color: 'yellow' }),
-      new THREE.MeshStandardMaterial({ color: 'red' }),
-      new THREE.MeshStandardMaterial({ color: 'green' }),
-      new THREE.MeshStandardMaterial({ color: 'blue' }),
-      new THREE.MeshStandardMaterial({ color: 'yellow' })
-    ]
+      new THREE.MeshStandardMaterial({ color: 0xffffff * Math.random() })
+    );
 
     geometry.clearGroups();
     const indexCount = geometry.index ? geometry.index.count : geometry.attributes['position'].count;
@@ -345,5 +336,4 @@ export class Dice8Component implements AfterViewInit, OnDestroy {
 
     return bestIndex + 1;
   }
-
 }
