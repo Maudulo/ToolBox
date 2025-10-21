@@ -191,21 +191,49 @@ export class Dice12Component implements AfterViewInit, OnDestroy {
     ];
 
     const diceShape = new CANNON.ConvexPolyhedron({ vertices, faces });
-    const dice = new CANNON.Body({ mass: 1, shape: diceShape, position, angularDamping: 0.1, linearDamping: 0.1 });
+
+    const diceMaterial = new CANNON.Material('dice');
+    const dice = new CANNON.Body({
+      mass: 1,
+      shape: diceShape,
+      position,
+      material: diceMaterial,
+      angularDamping: 0.1,
+      linearDamping: 0.1
+    });
     this.world.addBody(dice);
 
     // Three.js
-    const geometry = new THREE.IcosahedronGeometry(0.5, 0);
     const loader = new THREE.TextureLoader();
+    const geometry = new THREE.IcosahedronGeometry(1);
+    
+    // Faces numérotées 1–12
     const materials = Array.from({ length: 12 }, (_, i) =>
       // new THREE.MeshStandardMaterial({ map: loader.load(`assets/dice_12/face-${i + 1}.png`) })
       new THREE.MeshStandardMaterial({ color: 0xffffff * Math.random() })
     );
+
+    geometry.clearGroups();
+    const indexCount = geometry.index ? geometry.index.count : geometry.attributes['position'].count;
+    const faceCount = indexCount / 3;
+    for (let i = 0; i < faceCount; i++) {
+      geometry.addGroup(i * 3, 3, i % materials.length);
+    }
+    
     const mesh = new THREE.Mesh(geometry, materials);
     this.scene.add(mesh);
 
     this.diceBodies.push(dice);
     this.diceMeshes.push(mesh);
+
+    dice.addEventListener('collide', () => {
+      const sound = this.rollSoundRef?.nativeElement;
+      if (sound && sound.paused) {
+        sound.currentTime = 0;
+        sound.play().catch(() => {});
+      }
+    });
+
     return dice;
   }
 
