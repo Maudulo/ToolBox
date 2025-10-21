@@ -215,13 +215,20 @@ export class Dice4Component implements AfterViewInit, OnDestroy {
     }
 
     // 4 textures pour les 4 faces
-    const materials = Array.from({ length: 4 }, (_, i) =>
-      new THREE.MeshStandardMaterial({
-        map: loader.load(`assets/dice_4/face-${i + 1}.png`),
-        roughness: 0.5,
-        metalness: 0.2,
-      })
-    );
+    // const materials = Array.from({ length: 4 }, (_, i) =>
+    //   new THREE.MeshStandardMaterial({
+    //     map: loader.load(`assets/dice_4/face-${i + 1}.png`),
+    //     roughness: 0.5,
+    //     metalness: 0.2,
+    //   })
+    // );
+    
+    const materials = [
+      new THREE.MeshStandardMaterial({ color: 'red' }),
+      new THREE.MeshStandardMaterial({ color: 'green' }),
+      new THREE.MeshStandardMaterial({ color: 'blue' }),
+      new THREE.MeshStandardMaterial({ color: 'yellow' })
+    ]
 
     geometry.clearGroups();
 
