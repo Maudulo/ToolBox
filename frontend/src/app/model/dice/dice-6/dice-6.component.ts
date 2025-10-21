@@ -16,6 +16,7 @@ const BOX_WIDTH = 10;
 const BOX_HEIGHT = 50;
 const BOX_DEPTH = 10;
 const WALL_THICKNESS = 0.1;
+const ZOOM_FACTOR = 3;
 
 @Component({
   selector: 'app-dice-6',
@@ -63,7 +64,11 @@ export class Dice6Component implements AfterViewInit, OnDestroy {
     this.scene = new THREE.Scene();
 
     this.camera = new THREE.PerspectiveCamera(60, 1, 0.1, 100);
-    this.camera.position.set(5, 5, 7);
+    this.camera.position.set(
+      5 * ZOOM_FACTOR,
+      5 * ZOOM_FACTOR,
+      7 * ZOOM_FACTOR
+    );
     this.camera.lookAt(0, 0, 0);
 
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
