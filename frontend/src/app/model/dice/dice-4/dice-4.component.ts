@@ -66,11 +66,7 @@ export class Dice4Component implements AfterViewInit, OnDestroy {
     this.scene = new THREE.Scene();
 
     this.camera = new THREE.PerspectiveCamera(60, 1, 0.1, 100);
-    this.camera.position.set(
-      5 * ZOOM_FACTOR,
-      5 * ZOOM_FACTOR,
-      7 * ZOOM_FACTOR
-    );
+    this.camera.position.set(5 * ZOOM_FACTOR, 5 * ZOOM_FACTOR, 7 * ZOOM_FACTOR);
     this.camera.lookAt(0, 0, 0);
 
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -95,13 +91,15 @@ export class Dice4Component implements AfterViewInit, OnDestroy {
     const light = new THREE.DirectionalLight(0xffffff, 0.9);
     light.position.set(10, 10, 10);
     this.scene.add(ambient, light);
-
+    
+    // Sol visuel
     const planeGeo = new THREE.PlaneGeometry(BOX_WIDTH, BOX_DEPTH);
     const planeMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
     const plane = new THREE.Mesh(planeGeo, planeMat);
     plane.rotation.x = -Math.PI / 2;
     this.scene.add(plane);
     
+    // Zone de lancer visible
     const boxGeo = new THREE.BoxGeometry(BOX_WIDTH, BOX_HEIGHT, BOX_DEPTH);
     const boxMat = new THREE.MeshBasicMaterial({
       color: 0x00ffcc,
@@ -196,48 +194,53 @@ export class Dice4Component implements AfterViewInit, OnDestroy {
     ];
     const diceShape = new CANNON.ConvexPolyhedron({ vertices, faces });
     const diceMaterial = new CANNON.Material('dice');
+
     const dice = new CANNON.Body({
       mass: 1,
       shape: diceShape,
       position,
       material: diceMaterial,
       angularDamping: 0.1,
-      linearDamping: 0.1
+      linearDamping: 0.1,
     });
     this.world.addBody(dice);
 
     // ----- VISUEL -----
     const loader = new THREE.TextureLoader();
-    const materials = [
-      new THREE.MeshBasicMaterial({ color: 'red' }),
-      new THREE.MeshBasicMaterial({ color: 'green' }),
-      // new THREE.MeshStandardMaterial({ map: loader.load('assets/dice_4/face-4.png') }),
-      new THREE.MeshBasicMaterial({ color: 'blue' }),
-      new THREE.MeshBasicMaterial({ color: 'yellow' })
-      // new THREE.MeshStandardMaterial({ map: loader.load('assets/dice_4/face-4.png') }),
-      // new THREE.MeshStandardMaterial({ map: loader.load('assets/dice_4/face-4.png') }),
-      // new THREE.MeshStandardMaterial({ map: loader.load('assets/dice_4/face-4.png') })
-    ]
+    let geometry: THREE.BufferGeometry = new THREE.TetrahedronGeometry(1);
 
-    // Création d’un tetraèdre
-    const geometry = new THREE.TetrahedronGeometry(1);
+    // 👉 S'assurer que la géométrie a bien des index
+    if (!geometry.index) {
+      geometry = geometry.toNonIndexed(); // pas besoin de caster en TetrahedronGeometry
+    }
 
-    // Clear les groupes par défaut
+    // 4 textures pour les 4 faces
+    const materials = Array.from({ length: 4 }, (_, i) =>
+      new THREE.MeshStandardMaterial({
+        map: loader.load(`assets/dice_4/face-${i + 1}.png`),
+        roughness: 0.5,
+        metalness: 0.2,
+      })
+    );
+
     geometry.clearGroups();
 
-    // Définir un groupe par face
-    // Chaque face a 3 sommets consécutifs (triangle)
-    geometry.addGroup(0, 3, 0);  // Face 0 → Mat 0
-    geometry.addGroup(3, 3, 1);  // Face 1 → Mat 1
-    geometry.addGroup(6, 3, 2);  // Face 2 → Mat 2
-    geometry.addGroup(9, 3, 3);  // Face 3 → Mat 3
+    const indexCount = geometry.index ? geometry.index.count : geometry.attributes['position'].count;
+    const faceCount = indexCount / 3;
+
+    // Associer une texture à chaque face
+    for (let i = 0; i < faceCount; i++) {
+      geometry.addGroup(i * 3, 3, i % materials.length);
+    }
 
     const mesh = new THREE.Mesh(geometry, materials);
     this.scene.add(mesh);
 
+    // ---- Lien physique / visuel ----
     this.diceBodies.push(dice);
     this.diceMeshes.push(mesh);
 
+    // ---- Son ----
     dice.addEventListener('collide', () => {
       const sound = this.rollSoundRef?.nativeElement;
       if (sound && sound.paused) {

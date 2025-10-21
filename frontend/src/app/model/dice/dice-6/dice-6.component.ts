@@ -66,11 +66,7 @@ export class Dice6Component implements AfterViewInit, OnDestroy {
     this.scene = new THREE.Scene();
 
     this.camera = new THREE.PerspectiveCamera(60, 1, 0.1,100);
-    this.camera.position.set(
-      5 * ZOOM_FACTOR,
-      5 * ZOOM_FACTOR,
-      7 * ZOOM_FACTOR
-    );
+    this.camera.position.set(5 * ZOOM_FACTOR, 5 * ZOOM_FACTOR, 7 * ZOOM_FACTOR);
     this.camera.lookAt(0, 0, 0);
 
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -96,12 +92,14 @@ export class Dice6Component implements AfterViewInit, OnDestroy {
     light.position.set(10, 10, 10);
     this.scene.add(ambient, light);
     
+    // Sol visuel
     const planeGeo = new THREE.PlaneGeometry(BOX_WIDTH, BOX_DEPTH);
     const planeMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
     const plane = new THREE.Mesh(planeGeo, planeMat);
     plane.rotation.x = -Math.PI / 2;
     this.scene.add(plane);
     
+    // Zone de lancer visible
     const boxGeo = new THREE.BoxGeometry(BOX_WIDTH, BOX_HEIGHT, BOX_DEPTH);
     const boxMat = new THREE.MeshBasicMaterial({
       color: 0x00ffcc,
@@ -225,20 +223,19 @@ export class Dice6Component implements AfterViewInit, OnDestroy {
     this.world.addBody(dice);
 
     const loader = new THREE.TextureLoader();
-    const materials = [
-      new THREE.MeshStandardMaterial({ map: loader.load('assets/dice_6/face-1.png') }),
-      new THREE.MeshStandardMaterial({ map: loader.load('assets/dice_6/face-6.png') }),
-      new THREE.MeshStandardMaterial({ map: loader.load('assets/dice_6/face-3.png') }),
-      new THREE.MeshStandardMaterial({ map: loader.load('assets/dice_6/face-4.png') }),
-      new THREE.MeshStandardMaterial({ map: loader.load('assets/dice_6/face-5.png') }),
-      new THREE.MeshStandardMaterial({ map: loader.load('assets/dice_6/face-2.png') }),
-    ];
     const geometry = new THREE.BoxGeometry(1, 1, 1);
+
+    // Faces numérotées 1–6
+    const materials = Array.from({ length: 6 }, (_, i) =>
+      new THREE.MeshStandardMaterial({ map: loader.load(`assets/dice_6/face-${i + 1}.png`) })
+    );
+
     const mesh = new THREE.Mesh(geometry, materials);
     this.scene.add(mesh);
 
     this.diceBodies.push(dice);
     this.diceMeshes.push(mesh);
+    
     return dice;
   }
 
