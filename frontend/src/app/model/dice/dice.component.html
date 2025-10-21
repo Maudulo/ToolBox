@@ -1,0 +1,20 @@
+<div class="dice-container">
+  <canvas #canvas></canvas>
+
+  <div class="controls">
+    <label for="diceSet">Jeu de dés :</label>
+    <input
+      id="diceSet"
+      type="text"
+      [(ngModel)]="diceSet"
+      placeholder="ex: 2D6;1D20;3D4"
+    />
+
+    <button (click)="initRollMultipleDice()">🎲 Lancer</button>
+
+    <div class="results" *ngIf="lastResults.length > 0">
+      <p>Résultats : {{ lastResults.join(' + ') }}</p>
+      <p class="sum">Somme : <strong>{{ totalSum }}</strong></p>
+    </div>
+  </div>
+</div>

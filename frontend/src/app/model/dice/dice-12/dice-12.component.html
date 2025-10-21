@@ -14,8 +14,8 @@
     <button (click)="rollMultipleDice(diceCount)">🎲 Lancer</button>
 
     <div class="results">
-      <p>Résultats : {{ lastResults.join(' + ') }}</p>
-      <p class="sum">Somme : <strong>{{ totalSum }}</strong></p>
+      <p>Résultats : {{ getLastResults().join(' + ') }}</p>
+      <p class="sum">Somme : <strong>{{ getTotalSum() }}</strong></p>
     </div>
   </div>
 
