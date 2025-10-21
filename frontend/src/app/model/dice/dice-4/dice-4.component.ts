@@ -10,6 +10,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { NgIf } from '@angular/common';
 
 const BOX_WIDTH = 20;
@@ -35,6 +36,7 @@ export class Dice4Component implements AfterViewInit, OnDestroy {
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
   private renderer!: THREE.WebGLRenderer;
+  private controls!: OrbitControls;
 
   private world!: CANNON.World;
   private groundBody!: CANNON.Body;
@@ -74,6 +76,20 @@ export class Dice4Component implements AfterViewInit, OnDestroy {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     this.renderer.setSize(600, 600);
     this.renderer.setPixelRatio(window.devicePixelRatio);
+    
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.enableDamping = true;
+    this.controls.dampingFactor = 0.05;
+
+    // Autoriser zoom et rotation
+    this.controls.enableZoom = true;
+    this.controls.minDistance = 4;   // distance minimale (évite de passer à travers les dés)
+    this.controls.maxDistance = 25;  // distance max (évite de trop s’éloigner)
+    this.controls.enablePan = true;
+
+    // Point autour duquel la caméra tourne
+    this.controls.target.set(0, 0, 0);
+    this.controls.update();
 
     const ambient = new THREE.AmbientLight(0xffffff, 0.6);
     const light = new THREE.DirectionalLight(0xffffff, 0.9);
@@ -248,6 +264,7 @@ export class Dice4Component implements AfterViewInit, OnDestroy {
 
     const now = performance.now();
     if (now - this.lastCheckTime > 200) this.checkIfDiceStopped();
+    this.controls.update();
     this.renderer.render(this.scene, this.camera);
   };
 
