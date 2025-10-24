@@ -79,48 +79,67 @@ export class Dice12Component implements AfterViewInit, OnDestroy {
   
   // #region CREATION DU DÉ
   private createDice(position: CANNON.Vec3): CANNON.Body {
-    // --- Cannon.js : créer la forme ConvexPolyhedron ---
-    const baseGeometry = new THREE.DodecahedronGeometry(0.5); // D12 de rayon 0.5
-    const nonIndexed = baseGeometry.toNonIndexed(); // Pour Cannon.js, non indexé
+    const t = (1 + Math.sqrt(5)) / 2; // nombre d'or
 
-    // Récupérer les vertices
-    const vertices: CANNON.Vec3[] = [];
-    const pos = nonIndexed.attributes['position'].array as Float32Array;
-    for (let i = 0; i < pos.length; i += 3) {
-      vertices.push(new CANNON.Vec3(pos[i], pos[i + 1], pos[i + 2]));
-    }
+    // --- 1. Sommets du dodécaèdre régulier ---
+    const rawVertices = [
+      [-1, -1, -1], [-1, -1, 1], [-1, 1, -1], [-1, 1, 1],
+      [1, -1, -1], [1, -1, 1], [1, 1, -1], [1, 1, 1],
+      [0, -1 / t, -t], [0, -1 / t, t], [0, 1 / t, -t], [0, 1 / t, t],
+      [-1 / t, -t, 0], [-1 / t, t, 0], [1 / t, -t, 0], [1 / t, t, 0],
+      [-t, 0, -1 / t], [t, 0, -1 / t], [-t, 0, 1 / t], [t, 0, 1 / t],
+    ].map(v => new CANNON.Vec3(v[0], v[1], v[2]));
 
-    // Créer les faces (triplets de sommets)
-    const faces: number[][] = [];
-    for (let i = 0; i < vertices.length; i += 3) {
-      faces.push([i, i + 1, i + 2]);
-    }
+    // --- 2. Faces (ordre corrigé CCW) ---
+    const faces = [
+      [0, 16, 2, 10, 8],
+      [0, 12, 1, 18, 16],
+      [1, 9, 11, 3, 18],
+      [3, 13, 2, 16, 18],
+      [4, 6, 10, 8, 14],
+      [4, 14, 12, 0, 8],
+      [5, 7, 15, 19, 9],
+      [5, 9, 1, 12, 14],
+      [6, 10, 11, 19, 15],
+      [6, 15, 7, 17, 10],
+      [8, 10, 17, 4, 0],
+      [13, 3, 11, 19, 7],
+    ];
+
+    // --- 3. Agrandir légèrement la forme physique (évite clipping) ---
+    const scale = 1.05;
+    const vertices = rawVertices.map(v => new CANNON.Vec3(v.x * scale, v.y * scale, v.z * scale));
 
     const diceShape = new CANNON.ConvexPolyhedron({ vertices, faces });
+    // Auto-correction (si une normale pointe vers l'intérieur)
+    diceShape.faceNormals.forEach((n, i) => {
+      const center = new CANNON.Vec3();
+      faces[i].forEach(idx => center.vadd(vertices[idx], center));
+      center.scale(1 / faces[i].length, center);
+      if (center.dot(n) > 0) faces[i].reverse();
+    });
+
 
     const diceMaterial = new CANNON.Material('dice');
     const dice = new CANNON.Body({
       mass: 1,
       shape: diceShape,
-      position,
+      position: new CANNON.Vec3(position.x, position.y + 0.1, position.z),
       material: diceMaterial,
       angularDamping: 0.1,
       linearDamping: 0.1
     });
+
     this.diceFactory.getWorld().addBody(dice);
 
-    // --- Three.js : créer le mesh pour l’affichage ---
-    const loader = new THREE.TextureLoader();
-    const geometry = new THREE.DodecahedronGeometry(0.5); // Géométrie Three.js normale
-
+    // --- 4. Rendu Three.js ---
+    const geometry = new THREE.DodecahedronGeometry(0.5);
     geometry.toNonIndexed();
 
-    // Créer des matériaux aléatoires pour les faces
     const materials = Array.from({ length: 12 }, () =>
       new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff })
     );
 
-    // Assigner un groupe par face
     geometry.clearGroups();
     const faceCount = geometry.attributes['position'].count / 3;
     for (let i = 0; i < faceCount; i++) {
@@ -128,13 +147,15 @@ export class Dice12Component implements AfterViewInit, OnDestroy {
     }
 
     const mesh = new THREE.Mesh(geometry, materials);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    mesh.position.copy(position as unknown as THREE.Vector3);
     this.diceFactory.getScene().add(mesh);
 
-    // Liens physique / visuel
+    // --- 5. Synchronisation physique/visuelle ---
     this.diceFactory.pushDiceBodies(dice);
     this.diceFactory.pushDiceMeshes(mesh);
 
-    // Son à la collision
     dice.addEventListener('collide', () => {
       const sound = this.rollSoundRef?.nativeElement;
       if (sound && sound.paused) {
