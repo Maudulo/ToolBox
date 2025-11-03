@@ -1,0 +1,25 @@
+<div class="dice-roller">
+  <div class="controls">
+    <label>
+      Type :
+      <select [(ngModel)]="selectedType">
+        <option *ngFor="let d of diceTypes" [ngValue]="d">{{d.name}}</option>
+      </select>
+    </label>
+
+    <label>
+      Nombre :
+      <input type="number" [(ngModel)]="count" min="1" max="20">
+    </label>
+
+    <button (click)="launch()">🎲 Lancer</button>
+  </div>
+
+  <canvas #canvasRef></canvas>
+
+  <div class="results" *ngIf="diceFactory.getLastResults().length">
+    <h3>Résultats :</h3>
+    <p>{{ diceFactory.getLastResults().join(', ') }}</p>
+    <h4>Total : {{ diceFactory.getTotalSum() }}</h4>
+  </div>
+</div>
