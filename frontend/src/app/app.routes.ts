@@ -7,8 +7,10 @@ import { Dice10Component } from './model/dice/dice-10/dice-10.component';
 import { Dice12Component } from './model/dice/dice-12/dice-12.component';
 import { Dice20Component } from './model/dice/dice-20/dice-20.component';
 import { DiceRollerComponent } from './content/dice-roller/dice-roller.component';
+import { CardComponent } from './content/card/card.component';
 
 export const routes: Routes = [
+    { path: 'card', component: CardComponent },
     { path: 'dice-roll', component: DiceRollerComponent },
     { path: 'dice', component: DiceComponent },
     { path: 'dice-4', component: Dice4Component },

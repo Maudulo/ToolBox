@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Modèle — Carte de sort (Pathfinder)</title>
+  <style>
+    :root{
+      --card-w: 680px;
+      --card-h: 980px;
+      --radius: 18px;
+      --padding: 22px;
+      --paper-base: #f7efd8;
+      --paper-shadow: rgba(30,20,10,0.25);
+      --text: #2b230f;
+      --muted: #6b5f49;
+      --accent: #8b5e3c;
+      --header-height: 120px;
+    }
+
+    /* page layout */
+    html,body{height:100%;margin:0;font-family: "Georgia", "Palatino", serif;background: #efe9df;display:flex;align-items:center;justify-content:center;padding:24px;color:var(--text)}
+
+    /* card */
+    .card{
+      width:var(--card-w);
+      height:var(--card-h);
+      border-radius:var(--radius);
+      box-shadow: 0 12px 28px var(--paper-shadow);
+      position:relative;
+      overflow:hidden;
+      background:
+        radial-gradient(1200px 500px at 10% 10%, rgba(255,255,255,0.35), transparent 8%),
+        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.02)),
+        repeating-linear-gradient(0deg, rgba(0,0,0,0.01) 0 1px, transparent 1px 6px),
+        var(--paper-base);
+      border: 6px solid rgba(0,0,0,0.06);
+      padding: var(--padding);
+      box-sizing: border-box;
+    }
+
+    /* decorative torn edge */
+    .card::before{
+      content:"";position:absolute;left:0;right:0;top:0;height:36px;background:
+        linear-gradient(180deg, rgba(0,0,0,0.06), transparent);
+      pointer-events:none;
+    }
+
+    header{
+      display:flex;align-items:center;gap:18px;height:var(--header-height);
+      border-radius:12px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,0.06), transparent);
+      box-shadow: inset 0 -6px 12px rgba(0,0,0,0.03);
+    }
+
+    .left-block{width:140px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+    .school-badge{
+      width:96px;height:96px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:40px;box-shadow:0 6px 14px rgba(0,0,0,0.12)
+    }
+    .level-pill{margin-top:8px;background:rgba(255,255,255,0.85);padding:6px 10px;border-radius:999px;font-weight:700;color:var(--muted);font-size:14px}
+
+    .meta{flex:1}
+    h1{margin:0;font-size:34px;letter-spacing:0.4px}
+    .meta-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}
+    .meta-item{background:rgba(255,255,255,0.7);padding:6px 10px;border-radius:8px;font-size:13px;color:var(--muted)}
+
+    /* description */
+    .desc{margin-top:18px;padding:16px;background:rgba(255,255,255,0.6);height:calc(100% - var(--header-height) - 78px);overflow:auto;border-radius:10px;box-shadow: inset 0 6px 18px rgba(0,0,0,0.02)}
+    .desc p{line-height:1.5;margin:0 0 10px}
+    .small{font-size:13px;color:var(--muted)}
+
+    /* footer line */
+    .footer{position:absolute;left:var(--padding);right:var(--padding);bottom:var(--padding);display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted)}
+
+    /* color accents per school */
+    .school-evocation{--school-color:#d94a4a}
+    .school-necromancy{--school-color:#5b3b83}
+    .school-conjuration{--school-color:#2b8fb7}
+    .school-abjuration{--school-color:#3b7a3d}
+    .school-transmutation{--school-color:#c77b2b}
+    .school-illusion{--school-color:#7b5aa2}
+    .school-enchantment{--school-color:#b24f9b}
+    .school-divination{--school-color:#3b6fa8}
+
+    /* apply accent */
+    .card .school-badge{background:var(--school-color,#8b5e3c)}
+    .card header{border-left:8px solid var(--school-color,#8b5e3c)}
+
+    /* form styling (editable) */
+    .field{outline:none;border:none;background:transparent}
+    [contenteditable]{min-height:22px}
+
+    /* responsive */
+    @media (max-width:760px){
+      :root{--card-w:92vw;--card-h:calc(92vw*1.4)}
+    }
+
+    /* print */
+    @media print{
+      body{background:white}
+      .card{box-shadow:none;border:none;margin:0}
+      .footer{display:none}
+    }
+
+    /* control panel small */
+    .controls{position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.75);padding:8px;border-radius:8px;box-shadow:0 6px 12px rgba(0,0,0,0.08)}
+    .controls select, .controls button{font-size:13px;padding:6px;border-radius:6px;border:1px solid rgba(0,0,0,0.06);}
+  </style>
+</head>
+<body>
+
+    <div class="controls" aria-hidden="true">
+      <label for="school">École</label>
+      <select id="school">
+        <option value="evocation">Evocation</option>
+        <option value="conjuration">Conjuration</option>
+        <option value="abjuration">Abjuration</option>
+        <option value="transmutation">Transmutation</option>
+        <option value="necromancy">Nécromancie</option>
+        <option value="illusion">Illusion</option>
+        <option value="enchantment">Enchantement</option>
+        <option value="divination">Divination</option>
+      </select>
+      <button id="exportBtn">Imprimer / Export PDF</button>
+    </div>
+  <div class="card school-evocation" id="card">
+
+    <header>
+      <div class="left-block">
+        <div class="school-badge" id="badge">Ev</div>
+        <div class="level-pill" contenteditable id="level">Niveau 3</div>
+      </div>
+
+      <div class="meta">
+        <h1 contenteditable id="name">Boule de feu</h1>
+
+        <div class="meta-row">
+          <div class="meta-item"><strong>Incantation :</strong> <span contenteditable id="cast">1 action</span></div>
+          <div class="meta-item"><strong>Composantes :</strong> <span contenteditable id="comp">V,S</span></div>
+          <div class="meta-item"><strong>Portée :</strong> <span contenteditable id="range">18 m (60 ft)</span></div>
+          <div class="meta-item"><strong>Cible :</strong> <span contenteditable id="target">Zone (cône)</span></div>
+          <div class="meta-item"><strong>Durée :</strong> <span contenteditable id="dur">Instantanée</span></div>
+          <div class="meta-item"><strong>Jet :</strong> <span contenteditable id="save">Refus</span></div>
+          <div class="meta-item"><strong>Rés. magie :</strong> <span contenteditable id="sr">Oui</span></div>
+        </div>
+      </div>
+    </header>
+
+    <main class="desc" id="desc" contenteditable>
+      <p><strong>Description :</strong></p>
+      <p>Une explosion instantanée de flammes se produit à l'endroit choisi, infligeant 6d6 points de dégâts de feu (réduction selon le jet de sauvegarde). Les créatures à l'intérieur de la zone subissent des dégâts et peuvent s'enflammer.</p>
+
+      <p class="small"><strong>Au lancement :</strong> Augmentez la puissance du sort en dépensant des emplacements de niveau supérieur.</p>
+
+      <p class="small">Texte d'exemple — replacez ce paragraphe par la description officielle en français pour le sort souhaité.</p>
+    </main>
+
+    <div class="footer">
+      <div class="small">Pathfinder — Carte de sort — Modèle éditable</div>
+      <div class="small">Conception : modèle HTML</div>
+    </div>
+  </div>
+
+  <script>
+    const card = document.getElementById('card');
+    const badge = document.getElementById('badge');
+    const sel = document.getElementById('school');
+    const exportBtn = document.getElementById('exportBtn');
+
+    const schools = {
+      evocation: {label:'Ev', class:'school-evocation', color:'#d94a4a'},
+      conjuration: {label:'Cj', class:'school-conjuration', color:'#2b8fb7'},
+      abjuration: {label:'Ab', class:'school-abjuration', color:'#3b7a3d'},
+      transmutation: {label:'Tr', class:'school-transmutation', color:'#c77b2b'},
+      necromancy: {label:'Nc', class:'school-necromancy', color:'#5b3b83'},
+      illusion: {label:'Il', class:'school-illusion', color:'#7b5aa2'},
+      enchantment: {label:'En', class:'school-enchantment', color:'#b24f9b'},
+      divination: {label:'Dv', class:'school-divination', color:'#3b6fa8'}
+    };
+
+    function applySchool(s){
+      // remove previous school- classes
+      Object.values(schools).forEach(sch=>card.classList.remove(sch.class));
+      card.classList.add(schools[s].class);
+      badge.textContent = schools[s].label;
+      // set CSS variable for custom color fallback
+      card.style.setProperty('--school-color', schools[s].color);
+    }
+
+    sel.addEventListener('change', e=>applySchool(e.target.value));
+
+    exportBtn.addEventListener('click', ()=>{
+      window.print();
+    });
+
+    // UX: make contenteditable fields behave nicely
+    document.querySelectorAll('[contenteditable]').forEach(el=>{
+      el.addEventListener('focus', ()=>el.dataset.old = el.innerText);
+      el.addEventListener('blur', ()=>{
+        if(!el.innerText.trim()) el.innerText = el.dataset.old || '';
+      });
+    });
+
+    // initialize
+    applySchool(sel.value);
+  </script>
+</body>
+</html>

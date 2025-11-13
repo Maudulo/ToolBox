@@ -1,0 +1,20 @@
+section {
+    background-color: brown;
+    position: relative;
+    height: 100%;
+    width: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .form {
+        position: absolute;
+        top: 10px;
+        right: 25px;
+        width: 200px;
+    }
+    .card {
+        background-color: black;
+    }
+}

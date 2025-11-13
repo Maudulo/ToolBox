@@ -1,0 +1,24 @@
+<section>
+    <div class="form">
+        <mat-form-field>
+            <mat-label>École</mat-label>
+            <mat-select>
+                @for (school of allSchool; track school) {
+                    <mat-option [value]="school.label">{{school.name}}</mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>Largeur</mat-label>
+            <input matInput type="number" [(ngModel)]="cardWidth">
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>Hauteur</mat-label>
+            <input matInput type="number" [(ngModel)]="cardHeight">
+        </mat-form-field>
+    </div>
+
+    <div class="card" [style.height.px]="cardHeight" [style.width.px]="cardWidth">
+        xxx
+    </div>
+</section>
