@@ -2,9 +2,9 @@
     <div class="form">
         <mat-form-field>
             <mat-label>École</mat-label>
-            <mat-select>
+            <mat-select [(ngModel)]="selectedScholl">
                 @for (school of allSchool; track school) {
-                    <mat-option [value]="school.label">{{school.name}}</mat-option>
+                    <mat-option [value]="school">{{school.name}}</mat-option>
                 }
             </mat-select>
         </mat-form-field>
@@ -16,9 +16,18 @@
             <mat-label>Hauteur</mat-label>
             <input matInput type="number" [(ngModel)]="cardHeight">
         </mat-form-field>
+        <!--<mat-form-field>
+            <mat-label>Exemplaire</mat-label>
+            <input matInput type="number" [(ngModel)]="cardNumber">
+        </mat-form-field>-->
     </div>
 
     <div class="card" [style.height.px]="cardHeight" [style.width.px]="cardWidth">
-        xxx
+        <div class="card-head" [style.border-left-color]="selectedScholl.color">
+            xxx
+        </div>
+        <div class="card-body">
+            {{ selectedScholl | json }}
+        </div>
     </div>
 </section>

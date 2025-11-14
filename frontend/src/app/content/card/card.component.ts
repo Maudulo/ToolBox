@@ -1,3 +1,4 @@
+import { JsonPipe } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -13,7 +14,7 @@ interface School {
 
 @Component({
   selector: 'app-card',
-  imports: [MatFormFieldModule, MatSelectModule, MatInputModule, FormsModule],
+  imports: [MatFormFieldModule, MatSelectModule, MatInputModule, FormsModule, JsonPipe],
   templateUrl: './card.component.html',
   styleUrl: './card.component.scss'
 })
@@ -28,6 +29,8 @@ export class CardComponent {
     {name: "Enchantement", color: "#b24f9b", label: "en", svg: ""},
     {name: "Divination", color: "#3b6fa8", label: "dv", svg: ""},
   ]
+  selectedScholl: School = this.allSchool[0]
   cardWidth: number = 350
   cardHeight: number = 500
+  cardNumber: number = 1
 }
