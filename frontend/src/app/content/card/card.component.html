@@ -16,15 +16,30 @@
             <mat-label>Hauteur</mat-label>
             <input matInput type="number" [(ngModel)]="cardHeight">
         </mat-form-field>
-        <!--<mat-form-field>
-            <mat-label>Exemplaire</mat-label>
-            <input matInput type="number" [(ngModel)]="cardNumber">
-        </mat-form-field>-->
+        <mat-form-field>
+            <mat-label>Item</mat-label>
+            <input matInput type="number" [(ngModel)]="itemNumber">
+        </mat-form-field>
     </div>
 
     <div class="card" [style.height.px]="cardHeight" [style.width.px]="cardWidth">
         <div class="card-head" [style.border-left-color]="selectedScholl.color">
-            xxx
+            <div class="head-left">
+                <div class="bagde" [style.background-color]="selectedScholl.color">{{selectedScholl.label}}</div>
+                <div class="level" contenteditable>Niveau 3</div>
+            </div>
+            <div class="meta">
+                <h3 contenteditable>Boucle de feu</h3>
+                <div class="meta-row">
+                    @for (_ of [].constructor(itemNumber); let i = $index; track i) {
+                        <div class="meta-item">
+                            <strong contenteditable>Incantation :</strong>
+                            <span contenteditable>1 action</span>
+                        </div>
+                    }
+
+                </div>
+            </div>
         </div>
         <div class="card-body">
             {{ selectedScholl | json }}

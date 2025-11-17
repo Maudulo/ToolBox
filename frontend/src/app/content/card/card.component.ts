@@ -32,5 +32,6 @@ export class CardComponent {
   selectedScholl: School = this.allSchool[0]
   cardWidth: number = 350
   cardHeight: number = 500
+  itemNumber: number = 2
   cardNumber: number = 1
 }
