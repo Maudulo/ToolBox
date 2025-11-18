@@ -4,6 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import {MatIconModule} from '@angular/material/icon';
+import {MatMenuModule} from '@angular/material/menu';
+import {MatButtonModule} from '@angular/material/button';
 
 interface School {
   name: string
@@ -14,7 +17,7 @@ interface School {
 
 @Component({
   selector: 'app-card',
-  imports: [MatFormFieldModule, MatSelectModule, MatInputModule, FormsModule, JsonPipe],
+  imports: [MatFormFieldModule, MatSelectModule, MatInputModule, FormsModule, JsonPipe, MatButtonModule, MatMenuModule, MatIconModule],
   templateUrl: './card.component.html',
   styleUrl: './card.component.scss'
 })
@@ -33,5 +36,9 @@ export class CardComponent {
   cardWidth: number = 350
   cardHeight: number = 500
   itemNumber: number = 2
-  cardNumber: number = 1
+  cardNumber: number = 3
+
+  printPage() {
+    window.print();
+  }
 }

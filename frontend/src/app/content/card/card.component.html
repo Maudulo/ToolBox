@@ -1,5 +1,15 @@
 <section>
     <div class="form">
+        <button matIconButton [matMenuTriggerFor]="beforeMenu" class="btn-menu">
+            <mat-icon>more_vert</mat-icon>
+        </button>
+        <button matIconButton class="btn-menu" (click)="printPage()">
+            <mat-icon>print</mat-icon>
+        </button>
+    </div>
+
+
+    <!--<div class="form">
         <mat-form-field>
             <mat-label>École</mat-label>
             <mat-select [(ngModel)]="selectedScholl">
@@ -17,11 +27,62 @@
             <input matInput type="number" [(ngModel)]="cardHeight">
         </mat-form-field>
         <mat-form-field>
+            <mat-label>Carte</mat-label>
+            <input matInput type="number" [(ngModel)]="cardNumber">
+        </mat-form-field>
+        <mat-form-field>
             <mat-label>Item</mat-label>
             <input matInput type="number" [(ngModel)]="itemNumber">
         </mat-form-field>
-    </div>
+    </div>-->
 
+    <mat-menu #beforeMenu="matMenu" xPosition="before">
+        <ng-template matMenuContent>
+
+            <div class="menu-form" (click)="$event.stopPropagation()">
+                <mat-form-field>
+                    <mat-label>École</mat-label>
+                    <mat-select [(ngModel)]="selectedScholl" (click)="$event.stopPropagation()">
+                        @for (school of allSchool; track school) {
+                            <mat-option [value]="school">{{school.name}}</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+            </div>
+
+            <div class="menu-form" (click)="$event.stopPropagation()">
+                <mat-form-field>
+                    <mat-label>Largeur</mat-label>
+                    <input matInput type="number" [(ngModel)]="cardWidth">
+                </mat-form-field>
+            </div>
+
+            <div class="menu-form" (click)="$event.stopPropagation()">
+                <mat-form-field>
+                    <mat-label>Hauteur</mat-label>
+                    <input matInput type="number" [(ngModel)]="cardHeight">
+                </mat-form-field>
+            </div>
+
+            <div class="menu-form" (click)="$event.stopPropagation()">
+                <mat-form-field>
+                    <mat-label>Carte</mat-label>
+                    <input matInput type="number" [(ngModel)]="cardNumber">
+                </mat-form-field>
+            </div>
+
+            <div class="menu-form" (click)="$event.stopPropagation()">
+                <mat-form-field>
+                    <mat-label>Item</mat-label>
+                    <input matInput type="number" [(ngModel)]="itemNumber">
+                </mat-form-field>
+            </div>
+
+        </ng-template>
+    </mat-menu>
+
+
+    @for (_ of [].constructor(cardNumber); let i = $index; track i) {
     <div class="card" [style.height.px]="cardHeight" [style.width.px]="cardWidth">
         <div class="card-head" [style.border-left-color]="selectedScholl.color">
             <div class="head-left">
@@ -37,12 +98,13 @@
                             <span contenteditable>1 action</span>
                         </div>
                     }
-
                 </div>
             </div>
         </div>
-        <div class="card-body">
-            {{ selectedScholl | json }}
+        <div class="card-body" contenteditable>
+            Une explosion instantanée de flammes se produit à l'endroit choisi, infligeant 6d6 points de dégâts de feu (réduction selon le jet de sauvegarde).
+            Les créatures à l'intérieur de la zone subissent des dégâts et peuvent s'enflammer.
         </div>
     </div>
+    }
 </section>
