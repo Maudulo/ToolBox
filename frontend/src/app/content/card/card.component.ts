@@ -41,4 +41,38 @@ export class CardComponent {
   printPage() {
     window.print();
   }
+
+  onPaste(event: ClipboardEvent) {
+    event.preventDefault(); // empêche le collage automatique
+
+    const clipboardData = event.clipboardData;
+    if (!clipboardData) return;
+
+    const text = clipboardData.getData('text/plain');
+
+    if (text.trim().startsWith('<svg')) {
+      this.insertSvg(event.target as HTMLElement, text);
+    } else {
+      document.execCommand('insertText', false, text);
+    }
+  }
+
+  insertSvg(target: HTMLElement, svgString: string) {
+    const range = window.getSelection()?.getRangeAt(0);
+    if (!range) return;
+
+    // Création d'un wrapper autour du SVG
+    const wrapper = document.createElement('span');
+    wrapper.classList.add('svg-wrapper');
+    wrapper.setAttribute('contenteditable', 'false');
+    wrapper.innerHTML = svgString;
+
+    range.deleteContents();
+    range.insertNode(wrapper);
+
+    // Déplacer le curseur après
+    range.setStartAfter(wrapper);
+    range.setEndAfter(wrapper);
+    range.collapse(false);
+  }
 }
